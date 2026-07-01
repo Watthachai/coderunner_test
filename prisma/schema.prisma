@@ -1,0 +1,70 @@
+// Cafe Pre-order & Pick-up System — data model.
+// Derived from src/types.ts + src/data.ts (the prototype mock) and the BRD/PRD
+// entities (Product, Customization Option, Customer, Order).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// เมนูเครื่องดื่ม — Product
+model Product {
+  id           String   @id // e.g. "PROD-001"
+  name_th      String
+  name_en      String
+  base_price   Int
+  image_url    String
+  category     String // Coffee | Tea | Non-Coffee | Bakery
+  is_available Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+// ตัวเลือกปรับแต่ง — Customization Option (BRD/PRD entity; seeded from the modal options)
+model CustomizationOption {
+  id          String @id // e.g. "OPT-001"
+  type        String // temperature | sweetness | milk | topping
+  name        String // "นมโอ๊ต", "ไข่มุก", "หวาน 50%", ...
+  extra_price Int    @default(0)
+}
+
+// ข้อมูลสมาชิก — Customer
+model Customer {
+  id        String   @id // e.g. "CUST-001"
+  phone     String   @unique
+  name      String
+  points    Int      @default(0)
+  tier      String   @default("General") // General | Silver | Gold
+  createdAt DateTime @default(now())
+}
+
+// ออเดอร์ — Order
+model Order {
+  id              String      @id // e.g. "ORD-101"
+  order_number    String // e.g. "#001"
+  phone           String
+  customer_name   String?
+  subtotal        Float
+  discount_amount Float       @default(0)
+  total           Float // net total after discount
+  points_earned   Int         @default(0)
+  slip_url        String?
+  status          String      @default("รอตรวจสอบ") // รอตรวจสอบ | กำลังชง | พร้อมรับ | สำเร็จ | ยกเลิก
+  created_at      DateTime    @default(now())
+  items           OrderItem[]
+}
+
+// รายการสินค้าในออเดอร์ — Order line item
+model OrderItem {
+  id             String   @id @default(cuid())
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId        String
+  product_id     String
+  product_name   String
+  customizations String[] // e.g. ["เย็น", "หวาน 50%", "นมโอ๊ต", "ไข่มุก"]
+  quantity       Int
+  price_per_unit Float
+}
