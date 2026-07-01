@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Derived from src/types.ts `Expense` + BRD "employees submit expenses" entity.
+model Expense {
+  id        String        @id @default(cuid())
+  title     String
+  amount    Float
+  category  Category
+  date      DateTime
+  status    ExpenseStatus @default(pending)
+  createdAt DateTime      @default(now())
+}
+
+enum Category {
+  Travel
+  Food
+  Software
+  Office
+}
+
+enum ExpenseStatus {
+  pending
+  approved
+  rejected
+}
